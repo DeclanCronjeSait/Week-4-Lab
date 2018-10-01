@@ -82,8 +82,14 @@ public class LoginServlet extends HttpServlet {
              }
              else 
              {
-                 Cookie c = new Cookie("username", username);
-                 c.setMaxAge(0);
+                 Cookie[] cookies = request.getCookies();
+                 for(Cookie cookie : cookies)
+                 {
+                     cookie.setMaxAge(0);
+                     cookie.setPath("/");
+                     response.addCookie(cookie);
+                 }
+                 
              }
 
              response.sendRedirect("Home");
