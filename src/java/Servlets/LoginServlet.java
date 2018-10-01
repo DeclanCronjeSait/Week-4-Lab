@@ -1,9 +1,11 @@
 package Servlets;
 
 import Models.User;
+import Services.CookieUtil;
 import Services.UserService;
 import java.io.IOException;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,8 +21,27 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException 
     {
-            
-        getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
+        if(request.getParameter("Logout") != null)
+        {
+            request.setAttribute("message", "You logged out... Good job!");
+            HttpSession session = request.getSession();
+            session.invalidate();
+        }
+        
+        if(request.getSession().getAttribute("user") != null)
+        {
+            response.sendRedirect("Home");
+        }
+        else
+        {
+            Cookie[] cookies = request.getCookies();
+            String userName = CookieUtil.getCookieValue(cookies, "username");
+            if(userName != null || !userName.equals(""))
+            {
+                request.setAttribute("userName", userName);
+            }
+            getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
+        }
     }
 
     @Override
@@ -46,9 +67,25 @@ public class LoginServlet extends HttpServlet {
             request.setAttribute("message", "Invalid username or password... Please try again.");
             getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
         }
-        else{
+        else
+        {
              HttpSession session = request.getSession();
+             
+             
              session.setAttribute("user", user);
+             if(request.getParameter("remember") != null)
+             {
+                Cookie c = new Cookie("username", username);
+                c.setMaxAge(30 * 60);
+                c.setPath("/");
+                response.addCookie(c);
+             }
+             else 
+             {
+                 Cookie c = new Cookie("username", username);
+                 c.setMaxAge(0);
+             }
+
              response.sendRedirect("Home");
         }
     }
